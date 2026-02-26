@@ -14,7 +14,10 @@ from app.schemas.document import (
     WebsiteIngestRequest, GDocIngestRequest, NotionIngestRequest,
 )
 from app.schemas.common import APIResponse
-from app.ingestion.pipeline import ingest_pdf, ingest_csv, ingest_website, ingest_gdoc, ingest_notion
+from app.ingestion.pipeline import (
+    ingest_pdf, ingest_csv, ingest_txt, ingest_docx, ingest_xlsx,
+    ingest_website, ingest_gdoc, ingest_notion,
+)
 from app.rag.vectorstore import VectorStore
 from app.core.logging import get_logger
 
@@ -44,7 +47,7 @@ async def upload_document(
     user: User = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Upload a PDF or CSV file for ingestion."""
+    """Upload a file (PDF, CSV, TXT, DOCX, XLSX) for ingestion."""
     ext = _validate_extension(file.filename)
     file_id = uuid4().hex[:12]
     filename = f"{file_id}_{file.filename}"
@@ -55,13 +58,19 @@ async def upload_document(
 
     org_id = str(user.org_id)
 
-    if ext == ".pdf":
-        doc = await ingest_pdf(db, file_path, file.filename, org_id)
-    elif ext == ".csv":
-        doc = await ingest_csv(db, file_path, file.filename, org_id)
-    else:
-        doc = await ingest_pdf(db, file_path, file.filename, org_id)
+    ingesters = {
+        ".pdf": ingest_pdf,
+        ".csv": ingest_csv,
+        ".txt": ingest_txt,
+        ".docx": ingest_docx,
+        ".xlsx": ingest_xlsx,
+    }
 
+    ingester = ingesters.get(ext)
+    if not ingester:
+        raise HTTPException(status_code=400, detail=f"No ingester for file type: {ext}")
+
+    doc = await ingester(db, file_path, file.filename, org_id)
     return DocumentUploadResponse(document=DocumentResponse.model_validate(doc))
 
 
@@ -183,10 +192,17 @@ async def reindex_document(
     await db.flush()
 
     org_id = str(user.org_id)
-    if doc.source_type == "pdf" and doc.file_path:
-        doc = await ingest_pdf(db, doc.file_path, doc.name, org_id)
-    elif doc.source_type == "csv" and doc.file_path:
-        doc = await ingest_csv(db, doc.file_path, doc.name, org_id)
+
+    file_ingesters = {
+        "pdf": ingest_pdf,
+        "csv": ingest_csv,
+        "txt": ingest_txt,
+        "docx": ingest_docx,
+        "xlsx": ingest_xlsx,
+    }
+
+    if doc.source_type in file_ingesters and doc.file_path:
+        doc = await file_ingesters[doc.source_type](db, doc.file_path, doc.name, org_id)
     elif doc.source_type == "website" and doc.source_url:
         doc = await ingest_website(db, doc.source_url, doc.name, org_id)
     elif doc.source_type == "gdoc" and doc.source_url:
@@ -195,5 +211,7 @@ async def reindex_document(
     elif doc.source_type == "notion" and doc.source_url:
         notion_id = doc.source_url.rstrip("/").split("/")[-1].split("-")[-1]
         doc = await ingest_notion(db, notion_id, doc.name, org_id)
+    else:
+        raise HTTPException(status_code=400, detail=f"Cannot reindex source type: {doc.source_type}")
 
     return DocumentResponse.model_validate(doc)

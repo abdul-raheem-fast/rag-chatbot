@@ -143,8 +143,11 @@ export default function DocumentsPage() {
   const typeIcons: Record<string, string> = {
     pdf: "PDF",
     csv: "CSV",
+    txt: "TXT",
+    docx: "DOC",
+    xlsx: "XLS",
     website: "WEB",
-    gdoc: "DOC",
+    gdoc: "GDC",
     notion: "NTN",
   };
 

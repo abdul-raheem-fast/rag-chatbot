@@ -5,7 +5,7 @@ A production-ready Retrieval-Augmented Generation (RAG) chatbot for small busine
 ## Features
 
 - **Cited Answers** — Every response includes `[1]`, `[2]` references to exact source documents
-- **Multi-format Ingestion** — PDF, CSV, websites, Google Docs, Notion pages
+- **Multi-format Ingestion** — PDF, CSV, TXT, DOCX, XLSX, websites, Google Docs, Notion pages
 - **Streaming Chat** — Real-time token streaming via Server-Sent Events
 - **Multi-LLM Support** — Switch between OpenAI, Claude, Gemini from admin panel
 - **Role-Based Access** — Admin, Member, Viewer roles with JWT authentication
@@ -121,7 +121,7 @@ rag-chatbot/
 | POST | `/api/chat/feedback` | Thumbs up/down on a message | Yes |
 | GET | `/api/chat/conversations` | List conversation history | Yes |
 | GET | `/api/chat/conversations/{id}` | Get conversation with messages | Yes |
-| POST | `/api/documents/upload` | Upload PDF/CSV/TXT file | Admin |
+| POST | `/api/documents/upload` | Upload PDF/CSV/TXT/DOCX/XLSX file | Admin |
 | POST | `/api/documents/ingest-website` | Scrape + index a URL | Admin |
 | POST | `/api/documents/ingest-gdoc` | Ingest a Google Doc by ID/URL | Admin |
 | POST | `/api/documents/ingest-notion` | Ingest a Notion page by ID/URL | Admin |
@@ -240,6 +240,9 @@ NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 - [x] JWT authentication + role-based access control
 - [x] PDF ingestion + recursive chunking into ChromaDB
 - [x] CSV ingestion (row-level chunking with column context)
+- [x] TXT plain text ingestion
+- [x] DOCX (Word) document ingestion with paragraph + table extraction
+- [x] XLSX (Excel) ingestion with multi-sheet support
 - [x] Website scraping + ingestion (trafilatura)
 - [x] Google Docs ingestion (by doc ID or URL)
 - [x] Notion page ingestion (by page ID or URL)

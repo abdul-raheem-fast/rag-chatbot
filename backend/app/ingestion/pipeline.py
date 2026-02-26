@@ -2,7 +2,8 @@ import uuid
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.ingestion.extractors import (
-    extract_pdf, extract_csv, extract_website, extract_gdoc, extract_notion, compute_hash,
+    extract_pdf, extract_csv, extract_txt, extract_docx, extract_xlsx,
+    extract_website, extract_gdoc, extract_notion, compute_hash,
 )
 from app.ingestion.chunker import chunk_text
 from app.rag.vectorstore import get_vectorstore
@@ -95,6 +96,54 @@ async def ingest_csv(db: AsyncSession, file_path: str, doc_name: str, org_id: st
         org_id=uuid.UUID(org_id),
         name=doc_name,
         source_type="csv",
+        file_path=file_path,
+        content_hash=compute_hash(content),
+    )
+    db.add(doc)
+    await db.flush()
+    return await ingest_document(db, doc, raw_entries, org_id)
+
+
+async def ingest_txt(db: AsyncSession, file_path: str, doc_name: str, org_id: str) -> Document:
+    raw_entries = extract_txt(file_path)
+    content = "\n".join(e["text"] for e in raw_entries)
+    doc = Document(
+        id=uuid.uuid4(),
+        org_id=uuid.UUID(org_id),
+        name=doc_name,
+        source_type="txt",
+        file_path=file_path,
+        content_hash=compute_hash(content),
+    )
+    db.add(doc)
+    await db.flush()
+    return await ingest_document(db, doc, raw_entries, org_id)
+
+
+async def ingest_docx(db: AsyncSession, file_path: str, doc_name: str, org_id: str) -> Document:
+    raw_entries = extract_docx(file_path)
+    content = "\n".join(e["text"] for e in raw_entries)
+    doc = Document(
+        id=uuid.uuid4(),
+        org_id=uuid.UUID(org_id),
+        name=doc_name,
+        source_type="docx",
+        file_path=file_path,
+        content_hash=compute_hash(content),
+    )
+    db.add(doc)
+    await db.flush()
+    return await ingest_document(db, doc, raw_entries, org_id)
+
+
+async def ingest_xlsx(db: AsyncSession, file_path: str, doc_name: str, org_id: str) -> Document:
+    raw_entries = extract_xlsx(file_path)
+    content = "\n".join(e["text"] for e in raw_entries)
+    doc = Document(
+        id=uuid.uuid4(),
+        org_id=uuid.UUID(org_id),
+        name=doc_name,
+        source_type="xlsx",
         file_path=file_path,
         content_hash=compute_hash(content),
     )

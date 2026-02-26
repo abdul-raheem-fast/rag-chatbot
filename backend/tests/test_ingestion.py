@@ -1,7 +1,9 @@
 """Tests for the ingestion pipeline components."""
+import os
+import tempfile
 import pytest
 from app.ingestion.chunker import chunk_text
-from app.ingestion.extractors import compute_hash
+from app.ingestion.extractors import compute_hash, extract_txt
 
 
 def test_chunk_text_basic():
@@ -44,3 +46,31 @@ def test_chunk_metadata_propagation():
         assert chunk["metadata"]["doc_name"] == "test.pdf"
         assert chunk["metadata"]["page_number"] == 1
         assert "total_chunks" in chunk["metadata"]
+
+
+def test_extract_txt():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
+        f.write("This is a test document.\nIt has two lines.")
+        f.flush()
+        path = f.name
+
+    try:
+        entries = extract_txt(path)
+        assert len(entries) == 1
+        assert "test document" in entries[0]["text"]
+        assert "source_file" in entries[0]["metadata"]
+    finally:
+        os.unlink(path)
+
+
+def test_extract_txt_empty():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
+        f.write("")
+        f.flush()
+        path = f.name
+
+    try:
+        entries = extract_txt(path)
+        assert len(entries) == 0
+    finally:
+        os.unlink(path)

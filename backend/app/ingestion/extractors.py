@@ -4,6 +4,8 @@ import pandas as pd
 import trafilatura
 import httpx
 from pathlib import Path
+from docx import Document as DocxDocument
+from openpyxl import load_workbook
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -43,6 +45,69 @@ def extract_csv(file_path: str) -> list[dict]:
                 "text": text,
                 "metadata": {"row_number": int(idx) + 1},
             })
+    return entries
+
+
+def extract_txt(file_path: str) -> list[dict]:
+    """Read a plain text file."""
+    path = Path(file_path)
+    text = path.read_text(encoding="utf-8", errors="replace").strip()
+    if not text:
+        logger.warning("TXT file is empty", file_path=file_path)
+        return []
+    return [{"text": text, "metadata": {"source_file": path.name}}]
+
+
+def extract_docx(file_path: str) -> list[dict]:
+    """Extract text from a .docx file, preserving paragraph structure."""
+    doc = DocxDocument(file_path)
+    paragraphs = []
+    for i, para in enumerate(doc.paragraphs):
+        text = para.text.strip()
+        if text:
+            paragraphs.append(text)
+
+    if not paragraphs:
+        # Fall back to tables if no paragraphs
+        for table in doc.tables:
+            for row in table.rows:
+                cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                if cells:
+                    paragraphs.append(" | ".join(cells))
+
+    if not paragraphs:
+        logger.warning("DOCX extraction returned no text", file_path=file_path)
+        return []
+
+    full_text = "\n\n".join(paragraphs)
+    return [{"text": full_text, "metadata": {"source_file": Path(file_path).name}}]
+
+
+def extract_xlsx(file_path: str) -> list[dict]:
+    """Extract text from .xlsx — each row becomes an entry with column headers as context.
+    Handles multiple sheets."""
+    entries = []
+    try:
+        sheets = pd.read_excel(file_path, sheet_name=None, engine="openpyxl")
+    except Exception as e:
+        raise ValueError(f"Failed to read Excel file: {e}")
+
+    for sheet_name, df in sheets.items():
+        columns = list(df.columns)
+        for idx, row in df.iterrows():
+            parts = [f"{col}: {row[col]}" for col in columns if pd.notna(row[col])]
+            text = " | ".join(parts)
+            if text.strip():
+                entries.append({
+                    "text": text,
+                    "metadata": {
+                        "sheet_name": sheet_name,
+                        "row_number": int(idx) + 1,
+                    },
+                })
+
+    if not entries:
+        logger.warning("XLSX extraction returned no data", file_path=file_path)
     return entries
 
 
