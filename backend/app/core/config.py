@@ -66,6 +66,7 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     email_from: str = "noreply@yourcompany.com"
     hubspot_api_key: str = ""
+    notion_api_token: str = ""
 
     # Observability
     log_level: str = "INFO"

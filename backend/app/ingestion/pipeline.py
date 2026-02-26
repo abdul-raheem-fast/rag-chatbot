@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.ingestion.extractors import extract_pdf, extract_csv, extract_website, compute_hash
+from app.ingestion.extractors import (
+    extract_pdf, extract_csv, extract_website, extract_gdoc, extract_notion, compute_hash,
+)
 from app.ingestion.chunker import chunk_text
 from app.rag.vectorstore import get_vectorstore
 from app.models.document import Document
@@ -110,6 +112,46 @@ async def ingest_website(db: AsyncSession, url: str, doc_name: str, org_id: str)
         name=doc_name or url,
         source_type="website",
         source_url=url,
+        content_hash=compute_hash(content),
+    )
+    db.add(doc)
+    await db.flush()
+    return await ingest_document(db, doc, raw_entries, org_id)
+
+
+async def ingest_gdoc(db: AsyncSession, doc_id: str, doc_name: str, org_id: str) -> Document:
+    """Ingest a Google Doc by its document ID (public or shared via link)."""
+    from app.core.config import get_settings
+    settings = get_settings()
+    raw_entries = await extract_gdoc(doc_id, settings.google_sheets_credentials_json)
+    content = raw_entries[0]["text"]
+    doc = Document(
+        id=uuid.uuid4(),
+        org_id=uuid.UUID(org_id),
+        name=doc_name or f"Google Doc ({doc_id[:12]}...)",
+        source_type="gdoc",
+        source_url=f"https://docs.google.com/document/d/{doc_id}",
+        content_hash=compute_hash(content),
+    )
+    db.add(doc)
+    await db.flush()
+    return await ingest_document(db, doc, raw_entries, org_id)
+
+
+async def ingest_notion(db: AsyncSession, page_id: str, doc_name: str, org_id: str) -> Document:
+    """Ingest a Notion page by its page ID."""
+    from app.core.config import get_settings
+    settings = get_settings()
+    if not settings.notion_api_token:
+        raise ValueError("NOTION_API_TOKEN is not configured")
+    raw_entries = await extract_notion(page_id, settings.notion_api_token)
+    content = raw_entries[0]["text"]
+    doc = Document(
+        id=uuid.uuid4(),
+        org_id=uuid.UUID(org_id),
+        name=doc_name or f"Notion Page ({page_id[:12]}...)",
+        source_type="notion",
+        source_url=f"https://notion.so/{page_id.replace('-', '')}",
         content_hash=compute_hash(content),
     )
     db.add(doc)

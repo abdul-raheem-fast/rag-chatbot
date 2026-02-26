@@ -24,6 +24,8 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [gdocId, setGdocId] = useState("");
+  const [notionPageId, setNotionPageId] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => { loadFromStorage(); }, [loadFromStorage]);
@@ -69,6 +71,39 @@ export default function DocumentsPage() {
     try {
       await docsApi.ingestWebsite(token, websiteUrl);
       setWebsiteUrl("");
+      await fetchDocs();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleGDocIngest() {
+    if (!gdocId || !token) return;
+    setUploading(true);
+    setError("");
+    try {
+      const idMatch = gdocId.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const cleanId = idMatch ? idMatch[1] : gdocId.trim();
+      await docsApi.ingestGDoc(token, cleanId);
+      setGdocId("");
+      await fetchDocs();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleNotionIngest() {
+    if (!notionPageId || !token) return;
+    setUploading(true);
+    setError("");
+    try {
+      const cleanId = notionPageId.replace(/.*notion\.so\//, "").replace(/.*\//, "").split("?")[0].split("-").pop() || notionPageId.trim();
+      await docsApi.ingestNotion(token, cleanId);
+      setNotionPageId("");
       await fetchDocs();
     } catch (err: any) {
       setError(err.message);
@@ -134,7 +169,7 @@ export default function DocumentsPage() {
           <div className="card p-6 mb-8">
             <h2 className="font-semibold text-gray-900 mb-4">Add Documents</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* File upload */}
+              {/* File Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
                 <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-brand-400 hover:bg-brand-50 transition-colors">
@@ -176,6 +211,50 @@ export default function DocumentsPage() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-400 mt-2">Scrapes and indexes the page content</p>
+              </div>
+
+              {/* Google Docs */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Google Doc</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={gdocId}
+                    onChange={(e) => setGdocId(e.target.value)}
+                    placeholder="Paste Google Doc URL or ID"
+                    className="input-field flex-1"
+                  />
+                  <button
+                    onClick={handleGDocIngest}
+                    disabled={uploading || !gdocId}
+                    className="btn-primary whitespace-nowrap"
+                  >
+                    {uploading ? "..." : "Ingest"}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Public or shared Google Docs</p>
+              </div>
+
+              {/* Notion */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Notion Page</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={notionPageId}
+                    onChange={(e) => setNotionPageId(e.target.value)}
+                    placeholder="Paste Notion page URL or ID"
+                    className="input-field flex-1"
+                  />
+                  <button
+                    onClick={handleNotionIngest}
+                    disabled={uploading || !notionPageId}
+                    className="btn-primary whitespace-nowrap"
+                  >
+                    {uploading ? "..." : "Ingest"}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Requires NOTION_API_TOKEN in .env</p>
               </div>
             </div>
           </div>

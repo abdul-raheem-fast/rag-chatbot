@@ -138,6 +138,20 @@ export const docsApi = {
       body: JSON.stringify({ url, name }),
     }),
 
+  ingestGDoc: (token: string, docId: string, name?: string) =>
+    apiFetch("/api/documents/ingest-gdoc", {
+      method: "POST",
+      token,
+      body: JSON.stringify({ doc_id: docId, name }),
+    }),
+
+  ingestNotion: (token: string, pageId: string, name?: string) =>
+    apiFetch("/api/documents/ingest-notion", {
+      method: "POST",
+      token,
+      body: JSON.stringify({ page_id: pageId, name }),
+    }),
+
   delete: (token: string, docId: string) =>
     apiFetch(`/api/documents/${docId}`, { method: "DELETE", token }),
 

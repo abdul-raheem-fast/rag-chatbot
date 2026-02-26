@@ -11,10 +11,10 @@ from app.models.user import User
 from app.models.document import Document
 from app.schemas.document import (
     DocumentResponse, DocumentUploadResponse, DocumentListResponse,
-    WebsiteIngestRequest,
+    WebsiteIngestRequest, GDocIngestRequest, NotionIngestRequest,
 )
 from app.schemas.common import APIResponse
-from app.ingestion.pipeline import ingest_pdf, ingest_csv, ingest_website
+from app.ingestion.pipeline import ingest_pdf, ingest_csv, ingest_website, ingest_gdoc, ingest_notion
 from app.rag.vectorstore import VectorStore
 from app.core.logging import get_logger
 
@@ -73,6 +73,28 @@ async def ingest_website_endpoint(
 ):
     """Ingest a website URL."""
     doc = await ingest_website(db, body.url, body.name, str(user.org_id))
+    return DocumentUploadResponse(document=DocumentResponse.model_validate(doc))
+
+
+@router.post("/ingest-gdoc", response_model=DocumentUploadResponse)
+async def ingest_gdoc_endpoint(
+    body: GDocIngestRequest,
+    user: User = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Ingest a Google Doc by its document ID."""
+    doc = await ingest_gdoc(db, body.doc_id, body.name, str(user.org_id))
+    return DocumentUploadResponse(document=DocumentResponse.model_validate(doc))
+
+
+@router.post("/ingest-notion", response_model=DocumentUploadResponse)
+async def ingest_notion_endpoint(
+    body: NotionIngestRequest,
+    user: User = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Ingest a Notion page by its page ID."""
+    doc = await ingest_notion(db, body.page_id, body.name, str(user.org_id))
     return DocumentUploadResponse(document=DocumentResponse.model_validate(doc))
 
 
@@ -167,5 +189,11 @@ async def reindex_document(
         doc = await ingest_csv(db, doc.file_path, doc.name, org_id)
     elif doc.source_type == "website" and doc.source_url:
         doc = await ingest_website(db, doc.source_url, doc.name, org_id)
+    elif doc.source_type == "gdoc" and doc.source_url:
+        gdoc_id = doc.source_url.split("/d/")[1].split("/")[0] if "/d/" in doc.source_url else doc.source_url
+        doc = await ingest_gdoc(db, gdoc_id, doc.name, org_id)
+    elif doc.source_type == "notion" and doc.source_url:
+        notion_id = doc.source_url.rstrip("/").split("/")[-1].split("-")[-1]
+        doc = await ingest_notion(db, notion_id, doc.name, org_id)
 
     return DocumentResponse.model_validate(doc)
