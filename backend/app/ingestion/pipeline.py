@@ -6,7 +6,7 @@ from app.ingestion.extractors import (
     extract_website, extract_gdoc, extract_notion, compute_hash,
 )
 from app.ingestion.chunker import chunk_text
-from app.rag.vectorstore import get_vectorstore
+from app.rag.vectorstore import VectorStore
 from app.models.document import Document
 from app.core.logging import get_logger
 
@@ -47,7 +47,7 @@ async def ingest_document(
             doc_record.error_message = "No text content extracted"
             return doc_record
 
-        vs = get_vectorstore()
+        vs = VectorStore()
         vs.add_texts(
             texts=all_chunks,
             metadatas=all_metadatas,

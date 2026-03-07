@@ -13,7 +13,10 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 def _slugify(name: str) -> str:
     slug = re.sub(r"[^\w\s-]", "", name.lower())
-    return re.sub(r"[\s_]+", "-", slug).strip("-")
+    slug = re.sub(r"[\s_]+", "-", slug).strip("-")
+    if not slug:
+        slug = "org"
+    return slug[:86]  # leave room for "-" + 6-char uuid suffix (max 93 chars < 100 col limit)
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)

@@ -124,13 +124,40 @@ def extract_website(url: str) -> list[dict]:
 
 async def extract_gdoc(doc_id: str, credentials_json: str) -> list[dict]:
     """Fetch Google Doc content via export URL.
-    Requires a service account or OAuth token. Simplified version uses export link."""
+    For public/shared docs: uses unauthenticated export link.
+    For private docs: uses service account credentials if provided."""
+    import json
+
     export_url = f"https://docs.google.com/document/d/{doc_id}/export?format=txt"
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(export_url)
+    headers = {}
+
+    creds_data = None
+    try:
+        creds_data = json.loads(credentials_json) if credentials_json else None
+    except (json.JSONDecodeError, TypeError):
+        pass
+
+    if creds_data and creds_data.get("type") == "service_account":
+        try:
+            from google.oauth2.service_account import Credentials
+            scopes = ["https://www.googleapis.com/auth/drive.readonly"]
+            creds = Credentials.from_service_account_info(creds_data, scopes=scopes)
+            creds.refresh(google.auth.transport.requests.Request())
+            headers["Authorization"] = f"Bearer {creds.token}"
+        except Exception as e:
+            logger.warning("Service account auth failed, trying public access", error=str(e))
+
+    async with httpx.AsyncClient(follow_redirects=True) as client:
+        resp = await client.get(export_url, headers=headers)
         if resp.status_code != 200:
-            raise ValueError(f"Failed to fetch Google Doc {doc_id}: {resp.status_code}")
+            raise ValueError(
+                f"Failed to fetch Google Doc {doc_id}: HTTP {resp.status_code}. "
+                "Ensure the doc is shared publicly or a valid service account is configured."
+            )
         text = resp.text.strip()
+
+    if not text:
+        raise ValueError(f"Google Doc {doc_id} returned empty content")
     return [{"text": text, "metadata": {"gdoc_id": doc_id}}]
 
 
