@@ -27,14 +27,16 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     anthropic_api_key: str = ""
     google_api_key: str = ""
+    groq_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
     anthropic_model: str = "claude-3-5-sonnet-20241022"
     google_model: str = "gemini-1.5-flash"
+    groq_model: str = "llama-3.1-8b-instant"
 
-    # Embeddings
-    embedding_provider: str = "openai"
-    embedding_model: str = "text-embedding-3-small"
-    embedding_dimension: int = 1536
+    # Embeddings (default to local so no paid API needed)
+    embedding_provider: str = "local"
+    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_dimension: int = 384
 
     # Retrieval
     retrieval_top_k: int = 20
@@ -65,14 +67,10 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     email_from: str = "noreply@yourcompany.com"
-    hubspot_api_key: str = ""
     notion_api_token: str = ""
 
     # Observability
     log_level: str = "INFO"
-    langfuse_public_key: str = ""
-    langfuse_secret_key: str = ""
-    langfuse_host: str = "https://cloud.langfuse.com"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 

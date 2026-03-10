@@ -1,0 +1,16 @@
+question,answer,category
+How do I reset my password?,Go to login page and click Forgot Password. Enter your email and follow the reset link sent to your inbox. The link expires in 24 hours.,Account
+What payment methods do you accept?,We accept Visa, Mastercard, American Express, and PayPal. Enterprise customers can also pay via bank wire transfer with NET-30 terms.,Billing
+How do I cancel my subscription?,Go to Settings > Billing > Cancel Subscription. Your access continues until the end of the current billing period. Data is retained for 60 days.,Billing
+Can I import data from Salesforce?,Yes. Go to Settings > Integrations > Salesforce. Click Connect and authorize. NovaCRM supports bi-directional sync for contacts leads and opportunities.,Integrations
+What is the API rate limit?,Starter plan: 100 requests/minute. Professional plan: 500 requests/minute. Enterprise plan: 2000 requests/minute. Rate limit headers are included in every API response.,Technical
+How do I add team members?,Go to Settings > Team > Invite Member. Enter their email and select a role (Admin Member or Viewer). They will receive an invitation email valid for 7 days.,Account
+Do you offer a free trial?,Yes we offer a 14-day free trial of the Professional plan. No credit card required. You can upgrade or cancel at any time during the trial.,Billing
+Is there a mobile app?,Yes NovaCRM has iOS and Android apps available on the App Store and Google Play. The mobile app supports all core CRM features including push notifications.,Product
+How do I set up two-factor authentication?,Go to Settings > Security > Enable 2FA. You can use an authenticator app like Google Authenticator or Authy. SMS-based 2FA is also available for Enterprise plans.,Security
+What browsers are supported?,We support the latest versions of Chrome Firefox Safari and Edge. Internet Explorer is not supported. We recommend Chrome for the best experience.,Technical
+How do I export my data?,Go to Settings > Data > Export. Choose the data type (contacts deals or reports) and format (CSV or JSON). Large exports are emailed as a download link.,Account
+What is your uptime SLA?,NovaCloud guarantees 99.99% uptime for Enterprise plans and 99.9% for Professional plans. Uptime status is available at status.technova.com.,Technical
+How do I connect Slack?,Go to Settings > Integrations > Slack. Click Add to Slack and authorize. You can then receive CRM notifications and run commands directly from Slack channels.,Integrations
+What training resources are available?,We offer live webinars every Tuesday and Thursday at 2 PM PKT. Video tutorials are available at learn.technova.com. Enterprise customers get dedicated training sessions.,Support
+How do I contact support?,Starter/Professional: Email help@technova.com or use the in-app chat. Enterprise: Call +92-42-111-NOVA or use your dedicated Slack channel. Average response time is under 2 hours.,Support

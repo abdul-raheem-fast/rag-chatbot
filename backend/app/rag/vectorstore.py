@@ -1,3 +1,4 @@
+import os
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from app.core.config import get_settings
@@ -9,14 +10,22 @@ _client = None
 _collection = None
 
 
-def get_chroma_client() -> chromadb.HttpClient:
+def get_chroma_client():
     global _client
     if _client is None:
-        _client = chromadb.HttpClient(
-            host=settings.chroma_host,
-            port=settings.chroma_port,
-            settings=ChromaSettings(anonymized_telemetry=False),
-        )
+        if settings.chroma_host and settings.chroma_host not in ("", "local"):
+            _client = chromadb.HttpClient(
+                host=settings.chroma_host,
+                port=settings.chroma_port,
+                settings=ChromaSettings(anonymized_telemetry=False),
+            )
+        else:
+            persist_dir = os.path.join(os.path.dirname(__file__), "..", "..", "chroma_data")
+            os.makedirs(persist_dir, exist_ok=True)
+            _client = chromadb.PersistentClient(
+                path=persist_dir,
+                settings=ChromaSettings(anonymized_telemetry=False),
+            )
     return _client
 
 

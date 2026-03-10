@@ -1,0 +1,20 @@
+TechNova Solutions - Employee Handbook & Internal Policies
+==========================================================
+
+REMOTE WORK POLICY
+Employees may work remotely up to 3 days per week with manager approval. Core hours are 10 AM to 4 PM PKT when all team members must be available online. Remote workers must have a stable internet connection of at least 25 Mbps. VPN must be used when accessing company systems from outside the office.
+
+LEAVE POLICY
+Annual leave: 20 days per year, accrued monthly. Sick leave: 10 days per year, medical certificate required for 3+ consecutive days. Parental leave: 12 weeks paid for primary caregiver, 4 weeks paid for secondary caregiver. Public holidays: All gazetted holidays of Pakistan are observed. Leave requests must be submitted at least 5 business days in advance through the HR portal.
+
+EXPENSE REIMBURSEMENT
+Business travel: Economy class flights for domestic, business class for international flights over 6 hours. Hotel: Up to PKR 25,000/night for domestic, USD 200/night for international. Meals: Up to PKR 3,000/day for domestic travel, USD 75/day for international. All expenses must be submitted with receipts within 14 days of travel completion.
+
+PERFORMANCE REVIEWS
+Performance reviews are conducted bi-annually in June and December. Reviews include self-assessment, peer feedback, and manager evaluation. Performance ratings: Exceptional, Exceeds Expectations, Meets Expectations, Needs Improvement. Promotions and salary adjustments are effective January 1st each year.
+
+INFORMATION SECURITY
+All employees must complete annual security awareness training. Passwords must be at least 16 characters with uppercase, lowercase, numbers, and special characters. Company laptops must have full disk encryption enabled. Sharing credentials or accessing unauthorized systems is grounds for immediate termination. Report security incidents to security@technova.com within 1 hour of discovery.
+
+COMMUNICATION GUIDELINES
+Use Slack for day-to-day communication. Use email for external communication and formal internal announcements. Use Jira for project tracking and task management. Use Google Meet for video calls. Meeting-free Wednesdays are observed company-wide to allow focused deep work time.

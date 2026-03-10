@@ -81,6 +81,7 @@ export default function SettingsPage() {
     openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"],
     anthropic: ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"],
     google: ["gemini-1.5-flash", "gemini-1.5-pro"],
+    groq: ["llama-3.1-8b-instant", "llama-3.1-70b-versatile", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"],
   };
 
   if (!user || user.role !== "admin") return null;
@@ -118,6 +119,7 @@ export default function SettingsPage() {
                   <option value="openai">OpenAI</option>
                   <option value="anthropic">Anthropic (Claude)</option>
                   <option value="google">Google (Gemini)</option>
+                  <option value="groq">Groq (Llama / Mixtral)</option>
                 </select>
               </div>
               <div>

@@ -27,9 +27,11 @@ out/
 Thumbs.db
 
 # Uploads
-backend/uploads/*
-!backend/uploads/.gitkeep
+backend/uploads/
+backend/app/uploads/
 
 # Data
 *.db
 chromadata/
+chroma_data/
+backend/chroma_data/

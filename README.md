@@ -1,21 +1,40 @@
-# RAG Chatbot with Citations + AI Integrations
+# RAG Chatbot with Citations
 
-A production-ready Retrieval-Augmented Generation (RAG) chatbot for small businesses. Answers questions using your organization's documents with precise citations to source material.
+A full-stack Retrieval-Augmented Generation chatbot that answers questions using your organization's documents, with inline citations back to source material. Built as a portfolio project demonstrating production-style architecture for AI-powered knowledge bases.
+
+## What This Project Demonstrates
+
+- **End-to-end RAG pipeline**: document ingestion → chunking → vector embedding → semantic retrieval → reranking → LLM generation with citations
+- **Multi-format document support**: PDF, CSV, TXT, DOCX, XLSX file uploads, plus website scraping and Google Docs / Notion ingestion
+- **Provider-agnostic LLM integration**: swap between OpenAI, Anthropic (Claude), Google (Gemini), or Groq via admin settings — powered by LiteLLM
+- **Real-time streaming**: Server-Sent Events for token-by-token chat responses
+- **Full admin panel**: analytics dashboard, document management, LLM/budget settings, team/role management
+- **Multi-tenant architecture**: org-scoped data isolation, role-based access control (Admin / Member / Viewer)
+- **Clean separation of concerns**: FastAPI backend with async SQLAlchemy, Next.js frontend with Zustand state management
 
 ## Features
 
-- **Cited Answers** — Every response includes `[1]`, `[2]` references to exact source documents
-- **Multi-format Ingestion** — PDF, CSV, TXT, DOCX, XLSX, websites, Google Docs, Notion pages
-- **Streaming Chat** — Real-time token streaming via Server-Sent Events
-- **Multi-LLM Support** — Switch between OpenAI, Claude, Gemini from admin panel
-- **Role-Based Access** — Admin, Member, Viewer roles with JWT authentication
-- **Citations Panel** — Side panel shows document name, page number, highlighted snippet, relevance score
-- **Admin Dashboard** — Analytics, document management, user management, cost controls
-- **Token Budgets** — Configurable daily/monthly token limits per organization
-- **Slack Bot** — Ask questions directly in Slack, get cited answers in-thread
-- **Google Sheets** — Auto-log Q&A pairs for review
-- **Email Digests** — Weekly summary of top questions and unanswered queries
-- **Docker Ready** — One-command deployment with `docker-compose`
+| Feature | Status | Details |
+|---------|--------|---------|
+| Cited answers | Working | Every response includes `[1]`, `[2]` references to source chunks |
+| Streaming chat | Working | Real-time token streaming via SSE |
+| PDF / CSV / TXT / DOCX / XLSX upload | Working | Chunked and indexed into ChromaDB |
+| Website ingestion | Working | Scrapes page content via trafilatura |
+| Google Docs ingestion | Working | Public/shared-link docs via export URL |
+| Notion page ingestion | Working | Requires `NOTION_API_TOKEN` in `.env` |
+| Citations panel | Working | Side panel with doc name, page, snippet, relevance score |
+| Multi-LLM support | Working | OpenAI, Claude, Gemini, Groq — switchable from admin panel |
+| Role-based access | Working | JWT auth with Admin, Member, Viewer roles |
+| Admin analytics | Working | Document count, conversations, token usage, satisfaction rate |
+| Document management | Working | Upload, list, delete, reindex |
+| Token budgets | Working | Configurable daily/monthly limits per organization |
+| Feedback | Working | Thumbs up/down on assistant messages |
+| Slack bot | Code complete | Needs Slack app configuration to activate |
+| Google Sheets logging | Code complete | Q&A logging function exists but is not wired into the chat flow |
+| Email digest | Code complete | Send function exists but is not wired into a scheduler |
+| Rate limiting | Partial | SlowAPI configured but not applied to individual routes |
+| Conversation history API | Partial | Backend endpoints exist; frontend does not display past conversations |
+| Reranking | Optional | Uses cross-encoder if `sentence-transformers` is installed; falls back to retrieval scores |
 
 ## Tech Stack
 
@@ -23,12 +42,11 @@ A production-ready Retrieval-Augmented Generation (RAG) chatbot for small busine
 |-------|-----------|
 | Frontend | Next.js 14, React 18, Tailwind CSS, Zustand |
 | Backend | FastAPI (Python 3.12), SQLAlchemy 2.0, Pydantic v2 |
-| Vector DB | ChromaDB |
-| Database | PostgreSQL 16 |
-| Cache | Redis 7 |
-| LLM Gateway | LiteLLM (OpenAI / Anthropic / Google) |
-| Embeddings | OpenAI `text-embedding-3-small` (1536 dims) |
-| Reranking | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
+| Vector DB | ChromaDB (in-process persistent mode for local dev) |
+| Database | SQLite (local dev) / PostgreSQL (Docker/production) |
+| LLM Gateway | LiteLLM (OpenAI, Anthropic, Google, Groq) |
+| Embeddings | ONNX MiniLM-L6-v2 (local, free) or OpenAI `text-embedding-3-small` |
+| Reranking | `cross-encoder/ms-marco-MiniLM-L-6-v2` (optional) |
 
 ## Quick Start
 
@@ -36,47 +54,47 @@ A production-ready Retrieval-Augmented Generation (RAG) chatbot for small busine
 
 - Python 3.12+
 - Node.js 20+
-- Docker & Docker Compose (recommended)
+- An LLM API key (OpenAI, Groq, Anthropic, or Google)
 
-### Option 1: Docker (Recommended)
+### Local Development (no Docker needed)
 
 ```bash
 # 1. Clone the repo
 git clone https://github.com/abdul-raheem-fast/rag-chatbot.git
 cd rag-chatbot
 
-# 2. Copy environment file and configure
-cp .env.example .env
-# Edit .env — at minimum set OPENAI_API_KEY
+# 2. Configure environment
+cp .env.example backend/.env
+# Edit backend/.env — set at least one LLM API key (e.g. OPENAI_API_KEY or GROQ_API_KEY)
+# Set DEFAULT_LLM_PROVIDER to match your key (openai, groq, anthropic, or google)
 
-# 3. Start everything
-docker-compose up -d
-
-# 4. Open the app
-# Frontend: http://localhost:3000
-# Backend API docs: http://localhost:8000/docs
-```
-
-### Option 2: Local Development
-
-```bash
-# Backend
+# 3. Backend
 cd backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+venv\Scripts\activate        # Linux/Mac: source venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
-# Frontend (in a separate terminal)
+# 4. Frontend (separate terminal)
 cd frontend
 npm install
 npm run dev
 ```
 
-> **Note:** You'll need PostgreSQL, Redis, and ChromaDB running locally. You can start only the infrastructure services with Docker:
-> ```bash
-> docker-compose up -d postgres redis chromadb
-> ```
+Open http://localhost:3000, register an account, and start uploading documents.
+
+> **Note:** Local dev uses SQLite and in-process ChromaDB — no PostgreSQL, Redis, or external services required. Redis and reranking are optional and gracefully skipped if unavailable.
+
+### Docker
+
+```bash
+cp .env.example .env
+# Edit .env with your API keys and set DATABASE_URL to the PostgreSQL connection string
+docker-compose up -d
+
+# Frontend: http://localhost:3000
+# Backend: http://localhost:8000/docs (Swagger UI)
+```
 
 ## Project Structure
 
@@ -85,22 +103,22 @@ rag-chatbot/
 ├── backend/
 │   ├── app/
 │   │   ├── api/routes/          # Auth, Chat, Documents, Admin endpoints
-│   │   ├── core/                # Config, DB, Redis, Security, Logging
-│   │   ├── ingestion/           # PDF/CSV/Web/GDocs/Notion extractors + chunking
-│   │   ├── integrations/        # Slack, Google Sheets, Email
-│   │   ├── models/              # SQLAlchemy ORM models
-│   │   ├── rag/                 # Vector store, embeddings, reranker, LLM gateway, prompts
+│   │   ├── core/                # Config, DB, Security, Logging
+│   │   ├── ingestion/           # Extractors (PDF, CSV, TXT, DOCX, XLSX, Web, GDocs, Notion) + chunking
+│   │   ├── integrations/        # Slack bot, Google Sheets logger, Email digest
+│   │   ├── models/              # SQLAlchemy ORM (User, Org, Document, Conversation, Message)
+│   │   ├── rag/                 # VectorStore, Embeddings, Reranker, LLM Gateway, Prompts, RAG Engine
 │   │   ├── schemas/             # Pydantic request/response models
-│   │   └── main.py              # FastAPI app entry point
+│   │   └── main.py              # FastAPI entry point
 │   ├── alembic/                 # Database migrations
-│   ├── tests/                   # API and unit tests
+│   ├── tests/
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── app/                 # Next.js pages (chat, login, register, admin)
+│   │   ├── app/                 # Pages: Chat, Login, Register, Admin (Analytics, Documents, Settings)
 │   │   ├── components/          # Sidebar, ChatMessage, CitationsPanel, ChatInput
-│   │   └── lib/                 # API client, Zustand store
+│   │   └── lib/                 # API client, Zustand stores
 │   ├── package.json
 │   └── Dockerfile
 ├── docker-compose.yml
@@ -121,146 +139,54 @@ rag-chatbot/
 | POST | `/api/chat/feedback` | Thumbs up/down on a message | Yes |
 | GET | `/api/chat/conversations` | List conversation history | Yes |
 | GET | `/api/chat/conversations/{id}` | Get conversation with messages | Yes |
-| POST | `/api/documents/upload` | Upload PDF/CSV/TXT/DOCX/XLSX file | Admin |
-| POST | `/api/documents/ingest-website` | Scrape + index a URL | Admin |
+| POST | `/api/documents/upload` | Upload PDF/CSV/TXT/DOCX/XLSX | Admin |
+| POST | `/api/documents/ingest-website` | Scrape and index a URL | Admin |
 | POST | `/api/documents/ingest-gdoc` | Ingest a Google Doc by ID/URL | Admin |
 | POST | `/api/documents/ingest-notion` | Ingest a Notion page by ID/URL | Admin |
 | GET | `/api/documents` | List all documents | Yes |
-| GET | `/api/documents/{id}` | Get single document details | Yes |
 | DELETE | `/api/documents/{id}` | Delete document + vector chunks | Admin |
 | POST | `/api/documents/{id}/reindex` | Re-process a document | Admin |
 | GET | `/api/admin/analytics` | Dashboard analytics | Admin |
-| PUT | `/api/admin/settings` | Update LLM provider/budget | Admin |
+| PUT | `/api/admin/settings` | Update LLM provider/model/budgets | Admin |
 | GET | `/api/admin/users` | List organization users | Admin |
 | PUT | `/api/admin/users/{id}/role` | Change user role | Admin |
-| POST | `/api/admin/reset-token-usage` | Reset daily token counter | Admin |
-| POST | `/api/integrations/slack/events` | Slack Events API webhook | Slack |
 
 ## Configuration
 
-All settings are in `.env`. Key ones:
+Key environment variables (see `.env.example` for full list):
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key | *(required)* |
-| `DEFAULT_LLM_PROVIDER` | `openai`, `anthropic`, or `google` | `openai` |
-| `OPENAI_MODEL` | Default OpenAI model | `gpt-4o-mini` |
+| `DEFAULT_LLM_PROVIDER` | `openai`, `anthropic`, `google`, or `groq` | `openai` |
+| `OPENAI_API_KEY` | OpenAI API key | *(set if using OpenAI)* |
+| `GROQ_API_KEY` | Groq API key | *(set if using Groq)* |
+| `EMBEDDING_PROVIDER` | `local` (free ONNX) or `openai` | `local` |
 | `CHUNK_SIZE` | Token size per chunk | `512` |
-| `CHUNK_OVERLAP` | Overlap between chunks | `64` |
 | `SIMILARITY_THRESHOLD` | Min cosine score for retrieval | `0.72` |
-| `RERANK_THRESHOLD` | Min cross-encoder score | `0.25` |
 | `DAILY_TOKEN_BUDGET` | Max tokens/day per org | `500000` |
 | `NOTION_API_TOKEN` | Notion integration token | *(optional)* |
-| `SLACK_BOT_TOKEN` | Slack bot OAuth token | *(optional)* |
-
-## Production Deployment Guide
-
-### Required Environment Variables
-
-These **must** be set before running in production:
-
-```bash
-# Security — generate random strings (e.g., openssl rand -hex 32)
-SECRET_KEY=<random-64-char-string>
-JWT_SECRET=<random-64-char-string>
-
-# Database
-DATABASE_URL=postgresql+asyncpg://<user>:<pass>@<host>:5432/<dbname>
-
-# Redis
-REDIS_URL=redis://<host>:6379/0
-
-# ChromaDB
-CHROMA_HOST=<host>
-CHROMA_PORT=8000
-
-# LLM (at least one provider key)
-OPENAI_API_KEY=sk-...
-
-# App URLs
-BACKEND_URL=https://api.yourdomain.com
-FRONTEND_URL=https://yourdomain.com
-```
-
-### Deployment Steps
-
-```bash
-# 1. Clone and configure
-git clone https://github.com/abdul-raheem-fast/rag-chatbot.git
-cd rag-chatbot
-cp .env.example .env
-# Edit .env with production values
-
-# 2. Start with Docker
-docker-compose up -d
-
-# 3. Run database migrations
-docker-compose exec backend alembic upgrade head
-
-# 4. Verify
-curl http://localhost:8000/health
-# Should return: {"status":"healthy","app":"RAG Chatbot","env":"production"}
-```
-
-### Frontend Environment
-
-Set this in your frontend deployment (Vercel, Netlify, or Docker):
-
-```bash
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com
-```
-
-### Production Checklist
-
-- [ ] Set `APP_ENV=production` and `DEBUG=false`
-- [ ] Generate unique `SECRET_KEY` and `JWT_SECRET`
-- [ ] Set real `DATABASE_URL` (not localhost)
-- [ ] Configure HTTPS/TLS termination (nginx or cloud LB)
-- [ ] Set `DAILY_TOKEN_BUDGET` and `MONTHLY_TOKEN_BUDGET`
-- [ ] Disable Swagger docs: `docs_url` becomes `None` when `DEBUG=false`
-- [ ] Set up log aggregation (stdout → CloudWatch / Datadog / etc.)
-- [ ] Back up PostgreSQL on schedule
 
 ## Security
 
-> **WARNING:** Never commit your `.env` file or expose API keys. Only `.env.example` (with placeholder values) is tracked in git. If you fork this repo, ensure your `.env` is in `.gitignore` (it already is).
-
 - **Authentication**: JWT tokens with configurable expiry (default 24h)
-- **Authorization**: Role-based access — `admin`, `member`, `viewer`
-- **Data isolation**: All queries are scoped to `org_id`; no cross-tenant data leakage
-- **Rate limiting**: Configurable per-minute request limits via SlowAPI
-- **Token budgets**: Daily and monthly caps prevent runaway LLM costs
+- **Authorization**: Role-based access — Admin, Member, Viewer
+- **Data isolation**: All queries scoped to `org_id`; no cross-tenant data leakage
+- **Token budgets**: Daily and monthly caps to control LLM costs
 - **Secrets**: All credentials loaded from environment variables, never hardcoded
-- **CORS**: Restricted to configured frontend URL only
+- **CORS**: Restricted to configured frontend URL
 
-## Milestone Checklist
+> **Note:** Never commit your `.env` file. Only `.env.example` (with placeholder values) is tracked in git.
 
-- [x] Project scaffolding + Docker Compose setup
-- [x] PostgreSQL models + Alembic migration setup
-- [x] JWT authentication + role-based access control
-- [x] PDF ingestion + recursive chunking into ChromaDB
-- [x] CSV ingestion (row-level chunking with column context)
-- [x] TXT plain text ingestion
-- [x] DOCX (Word) document ingestion with paragraph + table extraction
-- [x] XLSX (Excel) ingestion with multi-sheet support
-- [x] Website scraping + ingestion (trafilatura)
-- [x] Google Docs ingestion (by doc ID or URL)
-- [x] Notion page ingestion (by page ID or URL)
-- [x] RAG engine (retrieve → rerank → prompt → LLM)
-- [x] Streaming chat API with Server-Sent Events
-- [x] Citation extraction and mapping
-- [x] Next.js chat UI with real-time streaming
-- [x] Citations side panel with snippets and scores
-- [x] Admin dashboard (analytics, token usage)
-- [x] Document management (upload, delete, reindex)
-- [x] Settings page (LLM provider swap, token budgets, team roles)
-- [x] Slack bot integration
-- [x] Google Sheets Q&A logging
-- [x] Email weekly digest
-- [x] Production deployment guide
-- [ ] HubSpot CRM integration
-- [ ] Langfuse observability tracing
-- [ ] Comprehensive evaluation test suite
+## Current Limitations / Future Improvements
+
+- **Google Docs**: Only works with public or link-shared documents. Private docs with service account credentials have a known bug.
+- **Conversation history**: Backend API exists but the frontend currently starts a fresh conversation each session.
+- **Google Sheets / Email digest**: Functions are implemented but not wired into the chat flow or a job scheduler.
+- **Rate limiting**: SlowAPI is configured but not applied to individual routes yet.
+- **Reranking**: Requires `sentence-transformers` + PyTorch (~500MB). Falls back to retrieval scores if not installed.
+- **HubSpot CRM**: Config field exists but integration is not implemented.
+- **Langfuse tracing**: Config fields exist but integration is not implemented.
+- **Evaluation suite**: No automated faithfulness/relevance test suite yet.
 
 ## License
 

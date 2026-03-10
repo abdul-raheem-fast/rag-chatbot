@@ -1,6 +1,6 @@
 """
 LLM Gateway using LiteLLM for provider-agnostic LLM calls.
-Supports OpenAI, Anthropic (Claude), and Google (Gemini).
+Supports OpenAI, Anthropic (Claude), Google (Gemini), and Groq.
 """
 import litellm
 from typing import AsyncGenerator
@@ -14,6 +14,7 @@ PROVIDER_MODEL_MAP = {
     "openai": settings.openai_model,
     "anthropic": settings.anthropic_model,
     "google": settings.google_model,
+    "groq": settings.groq_model,
 }
 
 litellm.drop_params = True
