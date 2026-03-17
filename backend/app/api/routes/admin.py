@@ -140,7 +140,7 @@ async def update_org_settings(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     if body.default_llm_provider is not None:
-        if body.default_llm_provider not in ("openai", "anthropic", "google", "groq"):
+        if body.default_llm_provider not in ("openai", "anthropic", "google"):
             raise HTTPException(status_code=400, detail="Invalid LLM provider")
         org.default_llm_provider = body.default_llm_provider
 

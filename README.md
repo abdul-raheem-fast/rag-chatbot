@@ -6,11 +6,21 @@ A full-stack Retrieval-Augmented Generation chatbot that answers questions using
 
 - **End-to-end RAG pipeline**: document ingestion → chunking → vector embedding → semantic retrieval → reranking → LLM generation with citations
 - **Multi-format document support**: PDF, CSV, TXT, DOCX, XLSX file uploads, plus website scraping and Google Docs / Notion ingestion
-- **Provider-agnostic LLM integration**: swap between OpenAI, Anthropic (Claude), Google (Gemini), or Groq via admin settings — powered by LiteLLM
+- **Provider-agnostic LLM integration**: swap between OpenAI, Anthropic (Claude), or Google (Gemini) via admin settings — powered by LiteLLM
 - **Real-time streaming**: Server-Sent Events for token-by-token chat responses
 - **Full admin panel**: analytics dashboard, document management, LLM/budget settings, team/role management
 - **Multi-tenant architecture**: org-scoped data isolation, role-based access control (Admin / Member / Viewer)
 - **Clean separation of concerns**: FastAPI backend with async SQLAlchemy, Next.js frontend with Zustand state management
+
+## Screenshots (for GitHub / Upwork)
+
+Add these to your portfolio:
+
+- **Chat + citations panel**: upload docs → ask a question → show citations panel open
+- **Document management**: multiple documents showing `ready` status + chunk counts
+- **Settings**: provider/model + token budgets + team roles
+
+Optional: add a **45–60s demo video** link here (Loom/YouTube).
 
 ## Features
 
@@ -23,7 +33,7 @@ A full-stack Retrieval-Augmented Generation chatbot that answers questions using
 | Google Docs ingestion | Working | Public/shared-link docs via export URL |
 | Notion page ingestion | Working | Requires `NOTION_API_TOKEN` in `.env` |
 | Citations panel | Working | Side panel with doc name, page, snippet, relevance score |
-| Multi-LLM support | Working | OpenAI, Claude, Gemini, Groq — switchable from admin panel |
+| Multi-LLM support | Working | OpenAI, Claude, Gemini — switchable from admin panel |
 | Role-based access | Working | JWT auth with Admin, Member, Viewer roles |
 | Admin analytics | Working | Document count, conversations, token usage, satisfaction rate |
 | Document management | Working | Upload, list, delete, reindex |
@@ -44,7 +54,7 @@ A full-stack Retrieval-Augmented Generation chatbot that answers questions using
 | Backend | FastAPI (Python 3.12), SQLAlchemy 2.0, Pydantic v2 |
 | Vector DB | ChromaDB (in-process persistent mode for local dev) |
 | Database | SQLite (local dev) / PostgreSQL (Docker/production) |
-| LLM Gateway | LiteLLM (OpenAI, Anthropic, Google, Groq) |
+| LLM Gateway | LiteLLM (OpenAI, Anthropic, Google) |
 | Embeddings | ONNX MiniLM-L6-v2 (local, free) or OpenAI `text-embedding-3-small` |
 | Reranking | `cross-encoder/ms-marco-MiniLM-L-6-v2` (optional) |
 
@@ -54,7 +64,7 @@ A full-stack Retrieval-Augmented Generation chatbot that answers questions using
 
 - Python 3.12+
 - Node.js 20+
-- An LLM API key (OpenAI, Groq, Anthropic, or Google)
+- An LLM API key (OpenAI, Anthropic, or Google) for real chat responses
 
 ### Local Development (no Docker needed)
 
@@ -65,8 +75,8 @@ cd rag-chatbot
 
 # 2. Configure environment
 cp .env.example backend/.env
-# Edit backend/.env — set at least one LLM API key (e.g. OPENAI_API_KEY or GROQ_API_KEY)
-# Set DEFAULT_LLM_PROVIDER to match your key (openai, groq, anthropic, or google)
+# Edit backend/.env — set at least one LLM API key (e.g. OPENAI_API_KEY)
+# Set DEFAULT_LLM_PROVIDER to match your key (openai, anthropic, or google)
 
 # 3. Backend
 cd backend
@@ -84,6 +94,8 @@ npm run dev
 Open http://localhost:3000, register an account, and start uploading documents.
 
 > **Note:** Local dev uses SQLite and in-process ChromaDB — no PostgreSQL, Redis, or external services required. Redis and reranking are optional and gracefully skipped if unavailable.
+>
+> You can open the UI without an API key, but **chat answers require an LLM API key**.
 
 ### Docker
 
@@ -157,9 +169,8 @@ Key environment variables (see `.env.example` for full list):
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DEFAULT_LLM_PROVIDER` | `openai`, `anthropic`, `google`, or `groq` | `openai` |
+| `DEFAULT_LLM_PROVIDER` | `openai`, `anthropic`, or `google` | `openai` |
 | `OPENAI_API_KEY` | OpenAI API key | *(set if using OpenAI)* |
-| `GROQ_API_KEY` | Groq API key | *(set if using Groq)* |
 | `EMBEDDING_PROVIDER` | `local` (free ONNX) or `openai` | `local` |
 | `CHUNK_SIZE` | Token size per chunk | `512` |
 | `SIMILARITY_THRESHOLD` | Min cosine score for retrieval | `0.72` |
